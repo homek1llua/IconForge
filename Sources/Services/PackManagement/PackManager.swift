@@ -181,25 +181,38 @@ final class PackManager: @unchecked Sendable {
     }
     
     private func createZipArchive(from sourceDirectory: URL, to destination: URL) throws {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
-        process.arguments = ["-r", "-q", destination.path, "."]
-        process.currentDirectoryURL = sourceDirectory
-        try process.run()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else {
-            throw IconForgeError.packExportFailed("zip command failed with status \(process.terminationStatus)")
+        var argv: [UnsafeMutablePointer<CChar>?] = [
+            strdup("/usr/bin/zip"), strdup("-r"), strdup("-q"), strdup(destination.path), strdup(".")
+        ]
+        defer { argv.forEach { $0?.deallocate() } }
+
+        var pid: pid_t = 0
+        var fileActions: posix_spawn_file_actions_t?
+        posix_spawn_file_actions_init(&fileActions)
+        defer { posix_spawn_file_actions_destroy(&fileActions) }
+
+        let status = posix_spawn(&pid, "/usr/bin/zip", &fileActions, nil, argv, nil)
+        guard status == 0 else {
+            throw IconForgeError.packExportFailed("posix_spawn zip failed with status \(status)")
         }
+        waitpid(pid, nil, 0)
     }
-    
+
     private func extractZipArchive(from source: URL, to destination: URL) throws {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
-        process.arguments = ["-q", source.path, "-d", destination.path]
-        try process.run()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else {
-            throw IconForgeError.packImportFailed("unzip command failed with status \(process.terminationStatus)")
+        var argv: [UnsafeMutablePointer<CChar>?] = [
+            strdup("/usr/bin/unzip"), strdup("-q"), strdup(source.path), strdup("-d"), strdup(destination.path)
+        ]
+        defer { argv.forEach { $0?.deallocate() } }
+
+        var pid: pid_t = 0
+        var fileActions: posix_spawn_file_actions_t?
+        posix_spawn_file_actions_init(&fileActions)
+        defer { posix_spawn_file_actions_destroy(&fileActions) }
+
+        let status = posix_spawn(&pid, "/usr/bin/unzip", &fileActions, nil, argv, nil)
+        guard status == 0 else {
+            throw IconForgeError.packImportFailed("posix_spawn unzip failed with status \(status)")
         }
+        waitpid(pid, nil, 0)
     }
 }

@@ -139,20 +139,45 @@ final class RespringManager: @unchecked Sendable {
 
     @discardableResult
     private func runCommand(_ path: String, arguments: [String]) -> (output: String, exitCode: Int32) {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: path)
-        process.arguments = arguments
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        do {
-            try process.run()
-            process.waitUntilExit()
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8) ?? ""
-            return (output, process.terminationStatus)
-        } catch {
-            return ("", -1)
+        var argv: [UnsafeMutablePointer<CChar>?] = [strdup(path)]
+        for arg in arguments {
+            argv.append(strdup(arg))
         }
+        defer { argv.forEach { $0?.deallocate() } }
+
+        let pipefds: [Int32] = [0, 0]
+        var fds = pipefds
+        guard pipe(&fds) == 0 else { return ("", -1) }
+
+        var pid: pid_t = 0
+        var fileActions: posix_spawn_file_actions_t?
+        posix_spawn_file_actions_init(&fileActions)
+        posix_spawn_file_actions_addclose(&fileActions, fds[0])
+        posix_spawn_file_actions_adddup2(&fileActions, fds[1], STDOUT_FILENO)
+        posix_spawn_file_actions_adddup2(&fileActions, fds[1], STDERR_FILENO)
+        posix_spawn_file_actions_addclose(&fileActions, fds[1])
+
+        let status = posix_spawn(&pid, path, &fileActions, nil, argv, nil)
+        posix_spawn_file_actions_destroy(&fileActions)
+
+        close(fds[1])
+
+        guard status == 0 else {
+            close(fds[0])
+            return ("", status)
+        }
+
+        var outputData = Data()
+        var buffer = [UInt8](repeating: 0, count: 512)
+        while read(fds[0], &buffer, buffer.count) > 0 {
+            outputData.append(buffer, count: buffer.count)
+        }
+        close(fds[0])
+
+        var exitCode: Int32 = 0
+        waitpid(pid, &exitCode, 0)
+
+        let output = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return (output, WEXITSTATUS(exitCode))
     }
 }
