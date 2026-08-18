@@ -8,20 +8,20 @@ on:
 
 env:
   SCHEME: IconForge
-  DESTINATION: "platform=iOS Simulator,name=iPhone 15,OS=17.5"
+  DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=18.0"
 
 jobs:
   build:
     name: Build
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
 
       - name: Xcode version
         run: |
@@ -42,8 +42,9 @@ jobs:
           fi
           echo "Project generated successfully"
 
-      - name: Build (Debug)
+      - name: Build (Debug, iOS Simulator)
         run: |
+          set -o pipefail
           xcodebuild build \
             -project IconForge.xcodeproj \
             -scheme "$SCHEME" \
@@ -53,10 +54,12 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
-            | xcpretty || true
+            CLANG_ENABLE_CODE_COVERAGE=NO \
+            2>&1 | xcpretty
 
-      - name: Build (Release)
+      - name: Build (Release, iOS Simulator)
         run: |
+          set -o pipefail
           xcodebuild build \
             -project IconForge.xcodeproj \
             -scheme "$SCHEME" \
@@ -66,11 +69,12 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
-            | xcpretty || true
+            CLANG_ENABLE_CODE_COVERAGE=NO \
+            2>&1 | xcpretty
 
   test:
     name: Test
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 30
     needs: build
 
@@ -78,8 +82,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -89,6 +93,7 @@ jobs:
 
       - name: Run tests
         run: |
+          set -o pipefail
           xcodebuild test \
             -project IconForge.xcodeproj \
             -scheme "$SCHEME" \
@@ -98,28 +103,4 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
-            | xcpretty || true
-
-  spm-build:
-    name: SPM Build
-    runs-on: macos-14
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
-
-      - name: Resolve dependencies
-        run: swift package resolve
-
-      - name: Build with SPM
-        run: |
-          swift build \
-            -Xswiftc -sdk \
-            -Xswiftc $(xcrun --sdk iphonesimulator --show-sdk-path) \
-            -Xswiftc -target \
-            -Xswiftc arm64-apple-ios15.0-simulator \
-            2>&1 || echo "SPM iOS build attempted (may need simulator SDK)"
+            2>&1 | xcpretty
