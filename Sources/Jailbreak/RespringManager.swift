@@ -1,5 +1,4 @@
 import Foundation
-import Darwin
 
 enum RespringMethod: String, CaseIterable, Identifiable, Sendable {
     case refreshIcons = "Refresh Icons"
@@ -179,6 +178,6 @@ final class RespringManager: @unchecked Sendable {
         waitpid(pid, &exitCode, 0)
 
         let output = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return (output, WEXITSTATUS(exitCode))
+        return (output, (exitCode >> 8) & 0xff)
     }
 }

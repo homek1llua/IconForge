@@ -1,5 +1,4 @@
 import Foundation
-import Darwin
 
 final class LaunchServicesManager: @unchecked Sendable {
 
@@ -84,6 +83,6 @@ final class LaunchServicesManager: @unchecked Sendable {
         }
         var exitCode: Int32 = 0
         waitpid(pid, &exitCode, 0)
-        return ("", WEXITSTATUS(exitCode))
+        return ("", (exitCode >> 8) & 0xff)
     }
 }
