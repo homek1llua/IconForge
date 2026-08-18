@@ -197,7 +197,7 @@ enum PrivilegedHelper {
         let scriptURL = tempDir.appendingPathComponent("script_\(UUID().uuidString).sh")
         try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         try? scriptData.write(to: scriptURL)
-        chmod(scriptURL.path, 0o755)
+        setFilePermissions(scriptURL.path, 0o755)
 
         defer { try? FileManager.default.removeItem(at: scriptURL) }
 
@@ -260,9 +260,9 @@ enum PrivilegedHelper {
         return (stdoutStr, stderrStr, exitStatus, stdoutData)
     }
 
-    private static func chmod(_ path: String, _ mode: mode_t) {
+    private static func setFilePermissions(_ path: String, _ mode: mode_t) {
         path.withCString { cPath in
-            chmod(cPath, mode)
+            Foundation.chmod(cPath, mode)
         }
     }
 }
