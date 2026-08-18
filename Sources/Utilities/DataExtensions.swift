@@ -18,7 +18,7 @@ extension Data {
 
 extension URL {
     var fileSize: Int64 {
-        (try? resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        Int64((try? resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
     }
     
     var isDirectory: Bool {

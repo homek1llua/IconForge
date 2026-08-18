@@ -30,6 +30,14 @@ final class IconEditorViewModel: ObservableObject {
         processImage()
     }
     
+    func loadImage(from image: UIImage) {
+        guard let data = image.jpegData(compressionQuality: 0.9) ?? image.pngData() else {
+            logger.error("Failed to convert image to data")
+            return
+        }
+        loadImage(from: data)
+    }
+    
     func loadImage(from url: URL) {
         guard let data = try? Data(contentsOf: url) else {
             logger.error("Failed to load image from URL: \(url.path)")

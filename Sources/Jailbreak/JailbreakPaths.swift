@@ -116,7 +116,7 @@ struct JailbreakPaths: Sendable {
             let largePng = appBundle.appendingPathComponent("\(name)-120.png")
             if fm.fileExists(atPath: largePng.path) { paths.append(largePng) }
         }
-        if let resources = fm.contentsOfDirectory(at: appBundle, includingPropertiesForKeys: nil) {
+        if let resources = try? fm.contentsOfDirectory(at: appBundle, includingPropertiesForKeys: nil) {
             let iconResources = resources.filter { resource in
                 let name = resource.deletingPathExtension().lastPathComponent.lowercased()
                 return name.hasSuffix("icon") || name == "appicon"

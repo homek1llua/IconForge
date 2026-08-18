@@ -10,9 +10,7 @@ struct IconValidator {
     
     static func validateImage(_ image: UIImage) -> IconValidationResult {
         var warnings: [String] = []
-        guard let size = image.cgImage?.size else {
-            return .invalid("Unable to read image properties.")
-        }
+        let size = image.size
         if size.width < minIconSize.width || size.height < minIconSize.height {
             warnings.append("Image is smaller than recommended minimum (\(Int(minIconSize.width))x\(Int(minIconSize.height))).")
         }

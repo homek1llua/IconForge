@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 final class LaunchServicesManager: @unchecked Sendable {
 
@@ -66,20 +67,23 @@ final class LaunchServicesManager: @unchecked Sendable {
 
     @discardableResult
     private func runCommand(_ path: String, arguments: [String]) -> (output: String, exitCode: Int32) {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: path)
-        process.arguments = arguments
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        do {
-            try process.run()
-            process.waitUntilExit()
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8) ?? ""
-            return (output, process.terminationStatus)
-        } catch {
-            return ("", -1)
+        var argv: [UnsafeMutablePointer<CChar>?] = [strdup(path)]
+        for arg in arguments {
+            argv.append(strdup(arg))
         }
+        defer { argv.forEach { $0?.deallocate() } }
+
+        var pid: pid_t = 0
+        var fileActions: posix_spawn_file_actions_t?
+        posix_spawn_file_actions_init(&fileActions)
+        defer { posix_spawn_file_actions_destroy(&fileActions) }
+
+        let status = posix_spawn(&pid, path, &fileActions, nil, argv, nil)
+        guard status == 0 else {
+            return ("", status)
+        }
+        var exitCode: Int32 = 0
+        waitpid(pid, &exitCode, 0)
+        return ("", WEXITSTATUS(exitCode))
     }
 }

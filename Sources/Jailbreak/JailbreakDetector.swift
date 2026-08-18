@@ -122,7 +122,8 @@ final class JailbreakDetector: Sendable {
             glob(cString, 0, nil, &result)
         }
         guard ret == 0, result.gl_pathc > 0 else { return nil }
-        let path = String(cString: result.gl_pathv[0])
+        guard let cPath = result.gl_pathv[0] else { return nil }
+        let path = String(cString: cPath)
         return URL(fileURLWithPath: path)
     }
 

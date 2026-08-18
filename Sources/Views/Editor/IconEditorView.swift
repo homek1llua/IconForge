@@ -227,7 +227,7 @@ struct IconEditorView: View {
                 Text("Background options coming soon.")
                     .foregroundColor(.secondary)
                 ColorPicker("Background Color", selection: Binding(
-                    get: { Color(viewModel.editorState.backgroundColor ?? CGColor.white) },
+                    get: { Color(viewModel.editorState.backgroundColor ?? UIColor.white.cgColor) },
                     set: { newColor in
                         if let cgColor = newColor.cgColor {
                             viewModel.editorState.backgroundColor = cgColor

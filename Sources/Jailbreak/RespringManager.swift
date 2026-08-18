@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 enum RespringMethod: String, CaseIterable, Identifiable, Sendable {
     case refreshIcons = "Refresh Icons"

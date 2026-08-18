@@ -237,7 +237,8 @@ final class IconRenderer: @unchecked Sendable {
                 let drawRect = CGRect(
                     x: (targetSize.width - drawSize.width) / 2,
                     y: (targetSize.height - drawSize.height) / 2,
-                    size: drawSize
+                    width: drawSize.width,
+                    height: drawSize.height
                 )
                 image.draw(in: drawRect)
             }
@@ -260,7 +261,8 @@ final class IconRenderer: @unchecked Sendable {
                 let drawRect = CGRect(
                     x: (targetSize.width - drawSize.width) / 2,
                     y: (targetSize.height - drawSize.height) / 2,
-                    size: drawSize
+                    width: drawSize.width,
+                    height: drawSize.height
                 )
                 image.draw(in: drawRect)
             }
