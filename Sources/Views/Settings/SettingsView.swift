@@ -20,9 +20,9 @@ struct SettingsView: View {
     
     private var jailbreakSection: some View {
         Section("Jailbreak") {
-            LabeledContent("Environment", value: viewModel.jailbreakEnvironment)
-            LabeledContent("Root Path", value: viewModel.rootPath)
-            LabeledContent("Icon Backend", value: viewModel.backendName)
+            row("Environment", value: viewModel.jailbreakEnvironment)
+            row("Root Path", value: viewModel.rootPath)
+            row("Icon Backend", value: viewModel.backendName)
             Toggle("Rootless Mode", isOn: .constant(viewModel.isRootless))
                 .disabled(true)
         }
@@ -50,9 +50,9 @@ struct SettingsView: View {
     private var storageSection: some View {
         Section("Storage") {
             if let info = viewModel.storageInfo {
-                LabeledContent("Total Used", value: info.formattedTotal)
-                LabeledContent("Backups", value: info.formattedBackups)
-                LabeledContent("Cache", value: info.formattedCache)
+                row("Total Used", value: info.formattedTotal)
+                row("Backups", value: info.formattedBackups)
+                row("Cache", value: info.formattedCache)
             }
             Button("Clear Cache") { viewModel.clearCache() }
                 .foregroundColor(.red)
@@ -74,22 +74,31 @@ struct SettingsView: View {
     private var diagnosticsSection: some View {
         Section("Diagnostics") {
             if let report = viewModel.diagnosticsReport {
-                LabeledContent("Jailbreak", value: report.jailbreakDetected ? "✓" : "✕")
-                LabeledContent("Environment", value: report.environment)
-                LabeledContent("iOS", value: report.iosVersion)
-                LabeledContent("Architecture", value: report.architecture)
-                LabeledContent("Root Access", value: report.rootAccess ? "✓" : "✕")
-                LabeledContent("LaunchServices", value: report.launchServicesAccess ? "✓" : "✕")
-                LabeledContent("Icon Backend", value: report.iconBackend)
-                LabeledContent("Cache Access", value: report.iconCacheAccess ? "✓" : "✕")
-                LabeledContent("Respring", value: report.respringCapability ? "✓" : "✕")
-                LabeledContent("Installed Apps", value: "\(report.installedAppsCount)")
-                LabeledContent("Customized", value: "\(report.customizedAppsCount)")
-                LabeledContent("Backups", value: "\(report.backupCount)")
-                LabeledContent("Storage", value: report.formattedStorageUsed)
+                row("Jailbreak", value: report.jailbreakDetected ? "✓" : "✕")
+                row("Environment", value: report.environment)
+                row("iOS", value: report.iosVersion)
+                row("Architecture", value: report.architecture)
+                row("Root Access", value: report.rootAccess ? "✓" : "✕")
+                row("LaunchServices", value: report.launchServicesAccess ? "✓" : "✕")
+                row("Icon Backend", value: report.iconBackend)
+                row("Cache Access", value: report.iconCacheAccess ? "✓" : "✕")
+                row("Respring", value: report.respringCapability ? "✓" : "✕")
+                row("Installed Apps", value: "\(report.installedAppsCount)")
+                row("Customized", value: "\(report.customizedAppsCount)")
+                row("Backups", value: "\(report.backupCount)")
+                row("Storage", value: report.formattedStorageUsed)
             }
             Button("Run Diagnostics") { Task { await viewModel.runDiagnostics() } }
                 .disabled(viewModel.isRunningDiagnostics)
+        }
+    }
+    
+    private func row(_ label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Text(value)
+                .foregroundColor(.secondary)
         }
     }
 }

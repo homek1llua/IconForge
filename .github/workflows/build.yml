@@ -43,7 +43,6 @@ jobs:
 
       - name: Build (Debug)
         run: |
-          set -o pipefail
           xcodebuild build \
             -project IconForge.xcodeproj \
             -scheme "$SCHEME" \
@@ -53,12 +52,12 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
-            2>&1 | tee build-debug.log | tail -200
+            2>&1 | tee build-debug.log
           echo "Build exit code: ${PIPESTATUS[0]}"
+          exit ${PIPESTATUS[0]}
 
       - name: Build (Release)
         run: |
-          set -o pipefail
           xcodebuild build \
             -project IconForge.xcodeproj \
             -scheme "$SCHEME" \
@@ -68,8 +67,9 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
-            2>&1 | tee build-release.log | tail -200
+            2>&1 | tee build-release.log
           echo "Build exit code: ${PIPESTATUS[0]}"
+          exit ${PIPESTATUS[0]}
 
       - name: Upload build logs
         if: failure()
