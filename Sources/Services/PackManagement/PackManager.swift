@@ -167,12 +167,17 @@ final class PackManager: @unchecked Sendable {
     }
     
     func duplicatePack(_ pack: IconPack) -> IconPack {
-        var newPack = pack
-        newPack.id = UUID()
-        newPack.name = "\(pack.name) Copy"
-        newPack.createdAt = Date()
-        newPack.modifiedAt = Date()
-        return newPack
+        IconPack(
+            id: UUID(),
+            name: "\(pack.name) Copy",
+            description: pack.description,
+            author: pack.author,
+            createdAt: Date(),
+            modifiedAt: Date(),
+            icons: pack.icons,
+            coverImageFilename: pack.coverImageFilename,
+            formatVersion: pack.formatVersion
+        )
     }
     
     private func createZipArchive(from sourceDirectory: URL, to destination: URL) throws {

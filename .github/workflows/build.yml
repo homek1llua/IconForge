@@ -53,7 +53,8 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
-            2>&1 | tail -100
+            2>&1 | tee build-debug.log | tail -200
+          echo "Build exit code: ${PIPESTATUS[0]}"
 
       - name: Build (Release)
         run: |
@@ -67,4 +68,14 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
-            2>&1 | tail -100
+            2>&1 | tee build-release.log | tail -200
+          echo "Build exit code: ${PIPESTATUS[0]}"
+
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build-debug.log
+            build-release.log

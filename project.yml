@@ -22,6 +22,7 @@ settings:
     COMPILER_INDEX_STORE_ENABLE: "NO"
     CLANG_ANALYZER_NONNULL: "YES"
     SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+    SWIFT_STRICT_CONCURRENCY: "minimal"
 
 configs:
   Debug: debug

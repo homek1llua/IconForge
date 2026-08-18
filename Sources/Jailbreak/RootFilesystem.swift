@@ -27,7 +27,9 @@ final class RootFilesystem: Sendable {
             }
         }
         let tempURL = URL(fileURLWithPath: "\(url.path).iconforge_temp_\(UUID().uuidString)")
-        guard data.write(to: tempURL) else {
+        do {
+            try data.write(to: tempURL)
+        } catch {
             throw RootFilesystemError.writeFailed(tempURL)
         }
         if fm.fileExists(atPath: url.path) {
