@@ -7,21 +7,21 @@ protocol IconBackend: AnyObject, Sendable {
     func readIcon(for app: InstalledApp) async throws -> UIImage
     func applyIcon(_ image: UIImage, to app: InstalledApp) async throws
     func restoreOriginalIcon(for app: InstalledApp) async throws
-    func refreshIcon(for app: InstalledApp) async throws
-    func refreshAllIcons() async throws
+    func refreshIcon(for app: InstalledApp) async
+    func refreshAllIcons() async
 }
 
 final class BackendManager: @unchecked Sendable {
-    
+
     static let shared = BackendManager()
-    
+
     private var backends: [IconBackend] = []
     private let filesystem: RootFilesystem
     private let paths: JailbreakPaths
     private let iconCacheManager: IconCacheManager
     private let launchServices: LaunchServicesManager
     private let logger: IconForgeLogger
-    
+
     private init() {
         self.filesystem = RootFilesystem()
         self.paths = JailbreakPaths.detect()
@@ -30,11 +30,11 @@ final class BackendManager: @unchecked Sendable {
         self.logger = .shared
         registerBackends()
     }
-    
+
     private func registerBackends() {
         let iosVersion = detectIOSVersion()
         logger.info("Detected iOS version: \(iosVersion)")
-        
+
         if #available(iOS 18.0, *) {
             let backend = IconBackendIOS18(
                 filesystem: filesystem, paths: paths,
@@ -73,22 +73,22 @@ final class BackendManager: @unchecked Sendable {
             launchServices: launchServices, logger: logger
         )
         if backend14.isAvailable { backends.append(backend14) }
-        
+
         if backends.isEmpty {
             backends.append(backend14)
         }
-        
+
         logger.info("Registered \(backends.count) icon backend(s): \(backends.map(\.name).joined(separator: ", "))")
     }
-    
+
     func bestBackend() -> IconBackend? {
         backends.first { $0.isAvailable }
     }
-    
+
     func backendName() -> String {
         bestBackend()?.name ?? "None"
     }
-    
+
     private func detectIOSVersion() -> String {
         ProcessInfo.processInfo.operatingSystemVersionString
     }

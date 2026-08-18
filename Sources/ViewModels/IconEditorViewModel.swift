@@ -169,8 +169,12 @@ final class IconEditorViewModel: ObservableObject {
         defer { isApplying = false }
         
         do {
-            logger.info("Creating backup for \(app.bundleIdentifier)")
-            _ = try backupManager.createBackup(for: app)
+            do {
+                logger.info("Creating backup for \(app.bundleIdentifier)")
+                _ = try backupManager.createBackup(for: app)
+            } catch {
+                logger.warning("Backup skipped for \(app.bundleIdentifier): \(error.localizedDescription)")
+            }
             
             let backend = BackendManager.shared.bestBackend()
             guard let backend else {
@@ -183,7 +187,10 @@ final class IconEditorViewModel: ObservableObject {
             applySuccess = true
             logger.info("Successfully applied icon to \(app.displayName)")
         } catch {
-            applyError = error.localizedDescription
+            let env = JailbreakDetector.shared.detectEnvironment()
+            let environment = env.environment.rawValue
+            let backendName = BackendManager.shared.backendName()
+            applyError = "Couldn't apply icon\n\n\(error.localizedDescription)\n\nEnvironment: \(environment)\nBackend: \(backendName)\n\nCheck Diagnostics for more details."
             logger.error("Failed to apply icon: \(error.localizedDescription)")
         }
     }

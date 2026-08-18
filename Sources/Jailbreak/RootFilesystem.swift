@@ -9,68 +9,115 @@ final class RootFilesystem: Sendable {
     }
 
     func readFile(at url: URL) throws -> Data {
+        if let data = FileManager.default.contents(atPath: url.path) {
+            return data
+        }
+
+        let result = try? PrivilegedHelper.readFile(from: url)
+        if let result, result.success, let data = result.data {
+            return data
+        }
+
         guard FileManager.default.fileExists(atPath: url.path) else {
             throw RootFilesystemError.fileNotFound(url)
         }
-        guard let data = FileManager.default.contents(atPath: url.path) else {
-            throw RootFilesystemError.readFailed(url)
-        }
-        return data
+        throw RootFilesystemError.readFailed(url)
     }
 
     func writeFile(_ data: Data, to url: URL, createIntermediateDirectories: Bool = true) throws {
         let fm = FileManager.default
+
         if createIntermediateDirectories {
             let dir = url.deletingLastPathComponent()
             if !fm.fileExists(atPath: dir.path) {
-                try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+                try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
             }
         }
-        let tempURL = URL(fileURLWithPath: "\(url.path).iconforge_temp_\(UUID().uuidString)")
+
         do {
-            try data.write(to: tempURL)
+            try data.write(to: url)
+            return
         } catch {
-            throw RootFilesystemError.writeFailed(tempURL)
+            // Sandbox write failed, use privileged helper
         }
-        if fm.fileExists(atPath: url.path) {
-            let backupURL = URL(fileURLWithPath: "\(url.path).iconforge_bak_\(UUID().uuidString)")
-            try? fm.copyItem(at: url, to: backupURL)
-            try fm.removeItem(at: url)
-        }
-        try fm.moveItem(at: tempURL, to: url)
-        try? FileManager.default.setAttributes(
-            [.posixPermissions: 0o644],
-            ofItemAtPath: url.path
+
+        let result = try PrivilegedHelper.writeFile(
+            data: data,
+            to: url,
+            backupOriginal: false
         )
+
+        guard result.success else {
+            throw RootFilesystemError.writeFailed(url)
+        }
+    }
+
+    func writeFilePrivileged(_ data: Data, to url: URL) throws {
+        let result = try PrivilegedHelper.writeFile(
+            data: data,
+            to: url,
+            backupOriginal: true
+        )
+        guard result.success else {
+            throw RootFilesystemError.writeFailed(url)
+        }
     }
 
     func copyItem(from source: URL, to destination: URL) throws {
         let fm = FileManager.default
         let destDir = destination.deletingLastPathComponent()
         if !fm.fileExists(atPath: destDir.path) {
-            try fm.createDirectory(at: destDir, withIntermediateDirectories: true)
+            try? fm.createDirectory(at: destDir, withIntermediateDirectories: true)
         }
         if fm.fileExists(atPath: destination.path) {
-            try fm.removeItem(at: destination)
+            try? fm.removeItem(at: destination)
         }
-        try fm.copyItem(at: source, to: destination)
+        do {
+            try fm.copyItem(at: source, to: destination)
+        } catch {
+            let ok = PrivilegedHelper.moveFile(from: source.path, to: destination.path)
+            if !ok { throw error }
+        }
     }
 
     func moveItem(from source: URL, to destination: URL) throws {
         let fm = FileManager.default
         let destDir = destination.deletingLastPathComponent()
         if !fm.fileExists(atPath: destDir.path) {
-            try fm.createDirectory(at: destDir, withIntermediateDirectories: true)
+            try? fm.createDirectory(at: destDir, withIntermediateDirectories: true)
         }
         if fm.fileExists(atPath: destination.path) {
-            try fm.removeItem(at: destination)
+            try? fm.removeItem(at: destination)
         }
-        try fm.moveItem(at: source, to: destination)
+        do {
+            try fm.moveItem(at: source, to: destination)
+        } catch {
+            let ok = PrivilegedHelper.moveFile(from: source.path, to: destination.path)
+            if !ok { throw error }
+        }
     }
 
     func removeItem(at url: URL) throws {
-        guard FileManager.default.fileExists(atPath: url.path) else { return }
-        try FileManager.default.removeItem(at: url)
+        if FileManager.default.fileExists(atPath: url.path) {
+            do {
+                try FileManager.default.removeItem(at: url)
+            } catch {
+                PrivilegedHelper.removeFile(at: url.path)
+            }
+        }
+    }
+
+    func removeItemPrivileged(at url: URL) {
+        if FileManager.default.fileExists(atPath: url.path) {
+            try? FileManager.default.removeItem(at: url)
+            PrivilegedHelper.removeFile(at: url.path)
+        } else {
+            PrivilegedHelper.removeFile(at: url.path)
+        }
+    }
+
+    func removeDirectoryPrivileged(at url: URL) {
+        PrivilegedHelper.removeDirectory(at: url.path)
     }
 
     func createDirectory(at url: URL, withIntermediateDirectories: Bool = true) throws {
@@ -89,7 +136,8 @@ final class RootFilesystem: Sendable {
     }
 
     func fileExists(at url: URL) -> Bool {
-        FileManager.default.fileExists(atPath: url.path)
+        if FileManager.default.fileExists(atPath: url.path) { return true }
+        return PrivilegedHelper.fileExists(at: url.path)
     }
 
     func fileAttributes(at url: URL) throws -> [FileAttributeKey: Any] {
@@ -97,17 +145,20 @@ final class RootFilesystem: Sendable {
     }
 
     func sha256Hash(of url: URL) throws -> String {
-        let data = try readFile(at: url)
-        return data.sha256Hash
+        if let data = FileManager.default.contents(atPath: url.path) {
+            return data.sha256Hash
+        }
+        if let hash = PrivilegedHelper.sha256(of: url.path) {
+            return hash
+        }
+        throw RootFilesystemError.readFailed(url)
     }
 
-    func copyWithAtomicReplacement(source: URL, destination: URL) throws {
-        let tempDest = URL(fileURLWithPath: "\(destination.path).atomic_\(UUID().uuidString)")
-        try copyItem(from: source, to: tempDest)
-        if fileExists(at: destination) {
-            try removeItem(at: destination)
+    func verifyWrite(data: Data, at url: URL) -> Bool {
+        if let fileData = FileManager.default.contents(atPath: url.path) {
+            return fileData.sha256Hash == data.sha256Hash
         }
-        try FileManager.default.moveItem(at: tempDest, to: destination)
+        return false
     }
 }
 
