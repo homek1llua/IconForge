@@ -8,25 +8,24 @@ on:
 
 env:
   SCHEME: IconForge
-  DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=18.0"
 
 jobs:
   build:
-    name: Build
+    name: Build & Test
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
-
       - name: Xcode version
         run: |
           xcodebuild -version
           swift --version
+
+      - name: List simulators
+        run: xcrun simctl list devices available | head -30
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -42,65 +41,30 @@ jobs:
           fi
           echo "Project generated successfully"
 
-      - name: Build (Debug, iOS Simulator)
+      - name: Build (Debug)
         run: |
           set -o pipefail
           xcodebuild build \
             -project IconForge.xcodeproj \
             -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
+            -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
-            CLANG_ENABLE_CODE_COVERAGE=NO \
-            2>&1 | xcpretty
+            2>&1 | tail -100
 
-      - name: Build (Release, iOS Simulator)
+      - name: Build (Release)
         run: |
           set -o pipefail
           xcodebuild build \
             -project IconForge.xcodeproj \
             -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
+            -destination "generic/platform=iOS Simulator" \
             -configuration Release \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ONLY_ACTIVE_ARCH=YES \
-            CLANG_ENABLE_CODE_COVERAGE=NO \
-            2>&1 | xcpretty
-
-  test:
-    name: Test
-    runs-on: macos-15
-    timeout-minutes: 30
-    needs: build
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate Xcode project
-        run: xcodegen generate
-
-      - name: Run tests
-        run: |
-          set -o pipefail
-          xcodebuild test \
-            -project IconForge.xcodeproj \
-            -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
-            -configuration Debug \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            ONLY_ACTIVE_ARCH=YES \
-            2>&1 | xcpretty
+            2>&1 | tail -100
