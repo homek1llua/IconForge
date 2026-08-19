@@ -6,6 +6,7 @@ final class RootFilesystem: Sendable {
 
     init(paths: JailbreakPaths = .detect()) {
         self.paths = paths
+        PrivilegedHelper.escalatePrivileges()
     }
 
     func readFile(at url: URL) throws -> Data {
@@ -38,7 +39,16 @@ final class RootFilesystem: Sendable {
             try data.write(to: url)
             return
         } catch {
-            // Sandbox write failed, use privileged helper
+            // Sandbox write failed — escalate and try privileged helper
+        }
+
+        let _ = PrivilegedHelper.escalatePrivileges()
+
+        do {
+            try data.write(to: url)
+            return
+        } catch {
+            // Even after escalation, sandbox write failed — use shell helper
         }
 
         let result = try PrivilegedHelper.writeFile(
@@ -53,6 +63,15 @@ final class RootFilesystem: Sendable {
     }
 
     func writeFilePrivileged(_ data: Data, to url: URL) throws {
+        let _ = PrivilegedHelper.escalatePrivileges()
+
+        do {
+            try data.write(to: url)
+            return
+        } catch {
+            // Sandbox write failed — use shell helper
+        }
+
         let result = try PrivilegedHelper.writeFile(
             data: data,
             to: url,

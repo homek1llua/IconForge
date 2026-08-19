@@ -14,7 +14,7 @@ struct SettingsView: View {
                 diagnosticsSection
             }
             .navigationTitle("Settings")
-            .task { viewModel.detectJailbreak(); viewModel.loadStorageInfo() }
+            .onAppear { viewModel.detectJailbreak(); viewModel.loadStorageInfo() }
         }
     }
     

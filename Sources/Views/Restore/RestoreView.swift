@@ -23,24 +23,28 @@ struct RestoreView: View {
                     }
                 }
             }
-            .task { viewModel.loadBackups() }
-            .alert("Restore All Icons?", isPresented: $viewModel.showConfirmRestoreAll) {
-                Button("Cancel", role: .cancel) {}
-                Button("Restore All") { Task { await viewModel.restoreAll() } }
-            } message: {
-                Text("This will restore all \(viewModel.backups.count) original icons.")
+            .onAppear { viewModel.loadBackups() }
+            .alert(isPresented: $viewModel.showConfirmRestoreAll) {
+                Alert(
+                    title: Text("Restore All Icons?"),
+                    message: Text("This will restore all \(viewModel.backups.count) original icons."),
+                    primaryButton: .cancel(Text("Cancel")),
+                    secondaryButton: .default(Text("Restore All")) { Task { await viewModel.restoreAll() } }
+                )
             }
-            .alert("Delete All Backups?", isPresented: $viewModel.showConfirmDeleteAll) {
-                Button("Cancel", role: .cancel) {}
-                Button("Delete All", role: .destructive) { viewModel.deleteAllBackups() }
-            } message: {
-                Text("This action cannot be undone.")
+            .alert(isPresented: $viewModel.showConfirmDeleteAll) {
+                Alert(
+                    title: Text("Delete All Backups?"),
+                    message: Text("This action cannot be undone."),
+                    primaryButton: .cancel(Text("Cancel")),
+                    secondaryButton: .destructive(Text("Delete All")) { viewModel.deleteAllBackups() }
+                )
             }
             .overlay {
                 if viewModel.isRestoring {
                     ProgressView("Restoring... \(Int(viewModel.restoreProgress * 100))%")
                         .padding()
-                        .background(.ultraThinMaterial)
+                        .background(Color(.secondarySystemBackground))
                         .cornerRadius(12)
                 }
             }
@@ -66,15 +70,13 @@ struct RestoreView: View {
     private var backupList: some View {
         List(viewModel.backups) { backup in
             BackupRow(backup: backup)
-                .swipeActions(edge: .trailing) {
+                .contextMenu {
                     Button {
                         Task { await viewModel.restoreBackup(for: backup.bundleIdentifier) }
                     } label: {
                         Label("Restore", systemImage: "arrow.counterclockwise")
                     }
-                    .tint(.green)
-                    
-                    Button(role: .destructive) {
+                    Button {
                         viewModel.deleteBackup(for: backup.bundleIdentifier)
                     } label: {
                         Label("Delete", systemImage: "trash")

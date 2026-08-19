@@ -33,8 +33,9 @@ struct AppsListView: View {
                     }
                 }
             }
-            .task { await viewModel.loadApps() }
-            .refreshable { await viewModel.refreshApps() }
+            .onAppear {
+                Task { await viewModel.loadApps() }
+            }
             .sheet(item: $appToEdit) { app in
                 IconEditorView(app: app)
             }
@@ -55,7 +56,7 @@ struct AppsListView: View {
             }
         }
         .padding(10)
-        .background(RoundedRectangle(cornerRadius: 10).fill(.ultraThinMaterial))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color(.secondarySystemBackground)))
         .padding(.horizontal)
         .padding(.top, 8)
     }

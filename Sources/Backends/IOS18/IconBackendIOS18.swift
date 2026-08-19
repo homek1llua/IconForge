@@ -3,7 +3,7 @@ import UIKit
 
 final class IconBackendIOS18: IconBackend, @unchecked Sendable {
 
-    let name = "iOS 18 Privileged + Full Cache Invalidation"
+    let name = "iOS 18 Privileged Bundle Replace + Full Cache Invalidation"
     var isAvailable: Bool = true
 
     private let filesystem: RootFilesystem

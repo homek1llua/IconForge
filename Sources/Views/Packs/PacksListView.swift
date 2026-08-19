@@ -23,21 +23,25 @@ struct PacksListView: View {
             .sheet(isPresented: $viewModel.showingCreateSheet) {
                 createPackSheet
             }
-            .alert("Error", isPresented: .init(
+            .alert(isPresented: .init(
                 get: { viewModel.errorMessage != nil },
                 set: { if !$0 { viewModel.errorMessage = nil } }
             )) {
-                Button("OK") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
+                Alert(
+                    title: Text("Error"),
+                    message: Text(viewModel.errorMessage ?? ""),
+                    dismissButton: .default(Text("OK")) { viewModel.errorMessage = nil }
+                )
             }
-            .alert("Success", isPresented: .init(
+            .alert(isPresented: .init(
                 get: { viewModel.successMessage != nil },
                 set: { if !$0 { viewModel.successMessage = nil } }
             )) {
-                Button("OK") { viewModel.successMessage = nil }
-            } message: {
-                Text(viewModel.successMessage ?? "")
+                Alert(
+                    title: Text("Success"),
+                    message: Text(viewModel.successMessage ?? ""),
+                    dismissButton: .default(Text("OK")) { viewModel.successMessage = nil }
+                )
             }
             .onAppear { viewModel.loadPacks() }
         }
@@ -55,7 +59,7 @@ struct PacksListView: View {
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
             Button("Create Pack") { viewModel.showingCreateSheet = true }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.bordered)
             Spacer()
         }
         .padding()
@@ -64,23 +68,15 @@ struct PacksListView: View {
     private var packList: some View {
         List(viewModel.packs) { pack in
             PackRow(pack: pack)
-                .swipeActions(edge: .trailing) {
-                    Button(role: .destructive) { viewModel.deletePack(pack) } label: {
+                .contextMenu {
+                    Button { viewModel.deletePack(pack) } label: {
                         Label("Delete", systemImage: "trash")
                     }
                     Button { viewModel.duplicatePack(pack) } label: {
                         Label("Duplicate", systemImage: "doc.on.doc")
                     }
-                }
-                .contextMenu {
                     Button { Task { await viewModel.exportPack(pack) } } label: {
                         Label("Export", systemImage: "square.and.arrow.up")
-                    }
-                    Button { viewModel.duplicatePack(pack) } label: {
-                        Label("Duplicate", systemImage: "doc.on.doc")
-                    }
-                    Button(role: .destructive) { viewModel.deletePack(pack) } label: {
-                        Label("Delete", systemImage: "trash")
                     }
                 }
         }

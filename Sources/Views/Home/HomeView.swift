@@ -26,8 +26,9 @@ struct HomeView: View {
                     }
                 }
             }
-            .task { await viewModel.loadDashboard() }
-            .refreshable { await viewModel.refreshDashboard() }
+            .onAppear {
+                Task { await viewModel.loadDashboard() }
+            }
         }
     }
     
@@ -44,7 +45,7 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(32)
-        .background(RoundedRectangle(cornerRadius: 20).fill(.ultraThinMaterial))
+        .background(RoundedRectangle(cornerRadius: 20).fill(Color(.secondarySystemBackground)))
     }
     
     private var statusCard: some View {
@@ -68,7 +69,7 @@ struct HomeView: View {
             }
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 16).fill(.ultraThinMaterial))
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemBackground)))
     }
     
     private var statsGrid: some View {
@@ -119,7 +120,7 @@ struct HomeView: View {
                         Spacer()
                     }
                     .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(.ultraThinMaterial))
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(.secondarySystemBackground)))
                 }
             }
         }
@@ -145,7 +146,7 @@ struct StatCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(.ultraThinMaterial))
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemBackground)))
     }
 }
 
@@ -164,6 +165,6 @@ struct QuickActionCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(.ultraThinMaterial))
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemBackground)))
     }
 }

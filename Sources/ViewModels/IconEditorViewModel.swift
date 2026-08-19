@@ -190,7 +190,8 @@ final class IconEditorViewModel: ObservableObject {
             let env = JailbreakDetector.shared.detectEnvironment()
             let environment = env.environment.rawValue
             let backendName = BackendManager.shared.backendName()
-            applyError = "Couldn't apply icon\n\n\(error.localizedDescription)\n\nEnvironment: \(environment)\nBackend: \(backendName)\n\nCheck Diagnostics for more details."
+            let diag = BackendManager.shared.diagnostics()
+            applyError = "Couldn't apply icon\n\n\(error.localizedDescription)\n\nEnvironment: \(environment)\nBackend: \(backendName)\n\n\(diag)\n\nCheck Diagnostics for full details."
             logger.error("Failed to apply icon: \(error.localizedDescription)")
         }
     }

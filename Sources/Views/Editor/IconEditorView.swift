@@ -3,7 +3,7 @@ import SwiftUI
 struct IconEditorView: View {
     let app: InstalledApp
     @StateObject private var viewModel = IconEditorViewModel()
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
     @State private var selectedTab: EditorTab = .adjust
     @State private var showImagePicker = false
     @State private var showSourcePicker = false
@@ -44,26 +44,36 @@ struct IconEditorView: View {
                     }
                 }
             }
-            .alert("System Application Warning", isPresented: $viewModel.showSystemAppWarning) {
-                Button("Cancel", role: .cancel) { viewModel.cancelSystemApp() }
-                Button("Continue") { viewModel.confirmSystemApp() }
-            } message: {
-                Text("This is a system application. Modifying its resources may cause SpringBoard or the application to behave unexpectedly. Proceed with caution.")
+            .alert(isPresented: $viewModel.showSystemAppWarning) {
+                Alert(
+                    title: Text("System Application Warning"),
+                    message: Text("This is a system application. Modifying its resources may cause SpringBoard or the application to behave unexpectedly. Proceed with caution."),
+                    primaryButton: .cancel(Text("Cancel")) { viewModel.cancelSystemApp() },
+                    secondaryButton: .default(Text("Continue")) { viewModel.confirmSystemApp() }
+                )
             }
-            .alert("Success", isPresented: $viewModel.applySuccess) {
-                Button("OK") { dismiss() }
-            } message: {
-                Text("Custom icon applied successfully!")
+            .alert(isPresented: $viewModel.applySuccess) {
+                Alert(
+                    title: Text("Success"),
+                    message: Text("Custom icon applied successfully!"),
+                    dismissButton: .default(Text("OK")) { dismiss() }
+                )
             }
-            .alert("Error", isPresented: .init(
+            .alert(isPresented: .init(
                 get: { viewModel.applyError != nil },
                 set: { if !$0 { viewModel.applyError = nil } }
             )) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(viewModel.applyError ?? "")
+                Alert(
+                    title: Text("Error"),
+                    message: Text(viewModel.applyError ?? ""),
+                    dismissButton: .default(Text("OK"))
+                )
             }
         }
+    }
+    
+    private func dismiss() {
+        presentationMode.wrappedValue.dismiss()
     }
     
     private var headerBar: some View {
@@ -138,7 +148,7 @@ struct IconEditorView: View {
             .padding(.horizontal)
             .padding(.vertical, 8)
         }
-        .background(.ultraThinMaterial)
+        .background(Color(.systemBackground))
     }
     
     @ViewBuilder
@@ -263,7 +273,7 @@ struct IconEditorView: View {
                             }
                         }
                         .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(.ultraThinMaterial))
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemBackground)))
                     }
                     .foregroundColor(.primary)
                 }
@@ -282,7 +292,7 @@ struct IconEditorView: View {
                     .foregroundColor(.secondary)
             }
             Slider(value: value, in: range)
-                .tint(.purple)
+                .accentColor(.purple)
         }
     }
 }

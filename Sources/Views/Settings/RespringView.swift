@@ -34,7 +34,7 @@ struct RespringView: View {
                             .foregroundColor(.secondary)
                     }
                     .padding()
-                    .background(RoundedRectangle(cornerRadius: 12).fill(.ultraThinMaterial))
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemBackground)))
                 }
                 .foregroundColor(.primary)
             }
@@ -48,11 +48,13 @@ struct RespringView: View {
         .onAppear {
             availableMethods = respringManager.availableRespringMethods()
         }
-        .alert("Confirm Respring", isPresented: $showConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Respring", role: .destructive) { performRespring() }
-        } message: {
-            Text("This will \(selectedMethod.rawValue.lowercased()). Your screen may go black briefly.")
+        .alert(isPresented: $showConfirmation) {
+            Alert(
+                title: Text("Confirm Respring"),
+                message: Text("This will \(selectedMethod.rawValue.lowercased()). Your screen may go black briefly."),
+                primaryButton: .cancel(Text("Cancel")),
+                secondaryButton: .destructive(Text("Respring")) { performRespring() }
+            )
         }
     }
     

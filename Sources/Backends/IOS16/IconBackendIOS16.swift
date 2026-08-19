@@ -3,7 +3,7 @@ import UIKit
 
 final class IconBackendIOS16: IconBackend, @unchecked Sendable {
 
-    let name = "iOS 16 Privileged + Cache"
+    let name = "iOS 16 Privileged Bundle Replace + Cache"
     var isAvailable: Bool = true
 
     private let filesystem: RootFilesystem

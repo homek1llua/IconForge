@@ -4,7 +4,7 @@ import UIKit
 struct ImagePicker: UIViewControllerRepresentable {
     let sourceType: UIImagePickerController.SourceType
     let onImageSelected: (UIImage) -> Void
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
     
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
@@ -31,18 +31,18 @@ struct ImagePicker: UIViewControllerRepresentable {
             if let image = info[.originalImage] as? UIImage {
                 parent.onImageSelected(image)
             }
-            parent.dismiss()
+            parent.presentationMode.wrappedValue.dismiss()
         }
         
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.dismiss()
+            parent.presentationMode.wrappedValue.dismiss()
         }
     }
 }
 
 struct DocumentPicker: UIViewControllerRepresentable {
     let onURLSelected: (URL) -> Void
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
     
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: [
@@ -70,7 +70,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
             if let url = urls.first {
                 parent.onURLSelected(url)
             }
-            parent.dismiss()
+            parent.presentationMode.wrappedValue.dismiss()
         }
     }
 }
@@ -83,7 +83,7 @@ enum ImageSource: String, CaseIterable, Identifiable {
 
 struct SourcePickerSheet: View {
     let onSelect: (ImageSource) -> Void
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
     
     var body: some View {
         NavigationView {
@@ -91,7 +91,7 @@ struct SourcePickerSheet: View {
                 ForEach(ImageSource.allCases) { source in
                     Button(action: {
                         onSelect(source)
-                        dismiss()
+                        presentationMode.wrappedValue.dismiss()
                     }) {
                         HStack {
                             Image(systemName: source == .photoLibrary ? "photo.on.rectangle" : "folder")
@@ -101,11 +101,10 @@ struct SourcePickerSheet: View {
                     }
                 }
             }
-            .navigationTitle("Import Image")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitle("Import Image", displayMode: .inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { presentationMode.wrappedValue.dismiss() }
                 }
             }
         }
