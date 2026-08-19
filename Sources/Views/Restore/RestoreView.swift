@@ -36,14 +36,17 @@ struct RestoreView: View {
                     secondaryButton: .destructive(Text("Delete All")) { viewModel.deleteAllBackups() }
                 )
             }
-            .overlay {
-                if viewModel.isRestoring {
-                    ProgressView("Restoring... \(Int(viewModel.restoreProgress * 100))%")
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(12)
-                }
-            }
+            .overlay(
+                Group {
+                    if viewModel.isRestoring {
+                        ProgressView("Restoring... \(Int(viewModel.restoreProgress * 100))%")
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(12)
+                    }
+                },
+                alignment: .center
+            )
         }
     }
     
