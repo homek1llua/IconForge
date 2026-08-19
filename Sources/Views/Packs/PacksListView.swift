@@ -13,13 +13,9 @@ struct PacksListView: View {
                 }
             }
             .navigationTitle("Icon Packs")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { viewModel.showingCreateSheet = true }) {
-                        Image(systemName: "plus")
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button(action: { viewModel.showingCreateSheet = true }) {
+                Image(systemName: "plus")
+            })
             .sheet(isPresented: $viewModel.showingCreateSheet) {
                 createPackSheet
             }
@@ -59,7 +55,10 @@ struct PacksListView: View {
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
             Button("Create Pack") { viewModel.showingCreateSheet = true }
-                .buttonStyle(.bordered)
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color.purple))
             Spacer()
         }
         .padding()
@@ -86,22 +85,18 @@ struct PacksListView: View {
     private var createPackSheet: some View {
         NavigationView {
             Form {
-                Section("Pack Details") {
+                Section(header: Text("Pack Details")) {
                     TextField("Pack Name", text: $viewModel.newPackName)
                     TextField("Description (optional)", text: $viewModel.newPackDescription)
                 }
             }
             .navigationTitle("New Pack")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { viewModel.showingCreateSheet = false }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Create") { Task { await viewModel.createPack() } }
-                        .disabled(viewModel.newPackName.isEmpty)
-                }
-            }
+            .navigationBarItems(
+                leading: Button("Cancel") { viewModel.showingCreateSheet = false },
+                trailing: Button("Create") { Task { await viewModel.createPack() } }
+                    .disabled(viewModel.newPackName.isEmpty)
+            )
         }
     }
 }

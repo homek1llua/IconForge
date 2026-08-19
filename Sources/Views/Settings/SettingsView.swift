@@ -13,13 +13,13 @@ struct SettingsView: View {
                 advancedSection
                 diagnosticsSection
             }
-            .navigationTitle("Settings")
+            .navigationBarTitle("Settings")
             .onAppear { viewModel.detectJailbreak(); viewModel.loadStorageInfo() }
         }
     }
     
     private var jailbreakSection: some View {
-        Section("Jailbreak") {
+        Section(header: Text("Jailbreak")) {
             row("Environment", value: viewModel.jailbreakEnvironment)
             row("Root Path", value: viewModel.rootPath)
             row("Icon Backend", value: viewModel.backendName)
@@ -29,7 +29,7 @@ struct SettingsView: View {
     }
     
     private var generalSection: some View {
-        Section("General") {
+        Section(header: Text("General")) {
             Picker("Appearance", selection: $viewModel.appearance) {
                 ForEach(AppAppearance.allCases) { Text($0.rawValue).tag($0) }
             }
@@ -39,7 +39,7 @@ struct SettingsView: View {
     }
     
     private var iconBehaviorSection: some View {
-        Section("Icon Behavior") {
+        Section(header: Text("Icon Behavior")) {
             Toggle("Auto-Refresh Cache", isOn: $viewModel.autoRefreshCache)
             Toggle("Auto-Respring", isOn: $viewModel.autoRespring)
             Toggle("Backup Before Modifying", isOn: $viewModel.backupBeforeModifying)
@@ -48,7 +48,7 @@ struct SettingsView: View {
     }
     
     private var storageSection: some View {
-        Section("Storage") {
+        Section(header: Text("Storage")) {
             if let info = viewModel.storageInfo {
                 row("Total Used", value: info.formattedTotal)
                 row("Backups", value: info.formattedBackups)
@@ -60,7 +60,7 @@ struct SettingsView: View {
     }
     
     private var advancedSection: some View {
-        Section("Advanced") {
+        Section(header: Text("Advanced")) {
             Button("Rebuild Icon Database") { viewModel.rebuildIconDatabase() }
             Button("Clear Logs") { viewModel.clearLogs() }
             Button("Export Diagnostic Logs") {
@@ -72,7 +72,7 @@ struct SettingsView: View {
     }
     
     private var diagnosticsSection: some View {
-        Section("Diagnostics") {
+        Section(header: Text("Diagnostics")) {
             if let report = viewModel.diagnosticsReport {
                 row("Jailbreak", value: report.jailbreakDetected ? "✓" : "✕")
                 row("Environment", value: report.environment)

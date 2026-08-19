@@ -23,16 +23,12 @@ struct AppsListView: View {
                 }
             }
             .navigationTitle("Installed Apps")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        sortMenu
-                        selectionMenu
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Menu {
+                sortMenu
+                selectionMenu
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            })
             .onAppear {
                 Task { await viewModel.loadApps() }
             }

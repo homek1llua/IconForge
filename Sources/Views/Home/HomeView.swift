@@ -19,13 +19,9 @@ struct HomeView: View {
                 .padding()
             }
             .navigationTitle("IconForge")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { Task { await viewModel.refreshDashboard() } }) {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button(action: { Task { await viewModel.refreshDashboard() } }) {
+                Image(systemName: "arrow.clockwise")
+            })
             .onAppear {
                 Task { await viewModel.loadDashboard() }
             }

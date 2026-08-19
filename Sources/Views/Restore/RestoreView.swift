@@ -13,16 +13,12 @@ struct RestoreView: View {
                 }
             }
             .navigationTitle("Restore")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button("Restore All") { viewModel.showConfirmRestoreAll = true }
-                        Button("Delete All", role: .destructive) { viewModel.showConfirmDeleteAll = true }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Menu {
+                Button("Restore All") { viewModel.showConfirmRestoreAll = true }
+                Button("Delete All") { viewModel.showConfirmDeleteAll = true }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            })
             .onAppear { viewModel.loadBackups() }
             .alert(isPresented: $viewModel.showConfirmRestoreAll) {
                 Alert(

@@ -102,11 +102,7 @@ struct SourcePickerSheet: View {
                 }
             }
             .navigationBarTitle("Import Image", displayMode: .inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { presentationMode.wrappedValue.dismiss() }
-                }
-            }
+            .navigationBarItems(leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() })
         }
     }
 }
